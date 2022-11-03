@@ -1,3 +1,0 @@
-dippy
-dippy/algorithms
-dippy/utils
