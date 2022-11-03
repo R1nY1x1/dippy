@@ -1,6 +1,15 @@
 import zlib
 
 
+def readImg(path: str):
+    if path[-3:] == "bmp":
+        return readBmp(path)
+    elif path[-3:] == "png":
+        return readPng(path)
+    else:
+        print("Unknown FileType Error")
+
+
 def readBmp(path: str):
     with open(path, "rb") as f:
         # BMP file header
@@ -111,7 +120,8 @@ def readPng(path: str):
                     if (i - bytesPerPixel) < 0:
                         tmp = int(prevScanData[i] / 2)
                     else:
-                        tmp = int((currentScanData[i-bytesPerPixel]+prevScanData[i]) / 2)
+                        tmp = int(
+                            (currentScanData[i-bytesPerPixel]+prevScanData[i]) / 2)
                     currentScanData[i] += tmp
                     currentScanData[i] %= 256
             elif filterType == 4:
@@ -191,7 +201,14 @@ def writeBmp(path: str, width: int, height: int, bitCount: int, colorTables, pix
         f.write(b)
 
 
-def writePng(path: str, width: int, height: int, depth: int, colorType: int, interlace: int, pixels):
+def writePng(
+        path: str,
+        width: int,
+        height: int,
+        depth: int,
+        colorType: int,
+        interlace: int,
+        pixels):
     with open(path, 'wb') as f:
         # PNG signature
         b = bytearray([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
@@ -217,12 +234,24 @@ def writePng(path: str, width: int, height: int, depth: int, colorType: int, int
         b.extend(bytearray([0xae, 0xce, 0x1c, 0xe9]))
 
         # IDAT
+        if colorType == 0:
+            bitsPerPixel = depth
+        elif colorType == 2:
+            bitsPerPixel = depth * 3
+        elif colorType == 3:
+            bitsPerPixel = depth
+        elif colorType == 4:
+            bitsPerPixel = depth * 2
+        elif colorType == 6:
+            bitsPerPixel = depth
+        rowLength = int((bitsPerPixel * width + 7) / 8)
         data = []
         for h in range(height):
-            offset = h * (width*3)
+            offset = h * (rowLength)
             # data[offset:] = [0]
             data.append(0)
-            data[offset+h+1:] = pixels[offset:offset+width*3]
+            data[offset+h+1:] = pixels[offset:offset+rowLength]
+        print(len(data))
         cmp_data = zlib.compress(bytearray(data))
 
         b.extend(len(cmp_data).to_bytes(4, 'big'))

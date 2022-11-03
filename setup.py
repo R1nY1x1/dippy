@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 from codecs import open
 from os import path
 
@@ -8,24 +8,29 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="dippy",
-    packages=find_packages(),
+    name="dip-python",
+    packages=[
+        'dippy',
+        'dippy/utils',
+        'dippy/algorithms',
+    ],
 
-    version="0.1",
+    version="0.1.4",
 
     license="MIT",
 
+    python_requires=">=3.6",
     install_requires=['numpy'],
 
     author="RinYixi",
     author_email="hayashi0241@gmail.com",
 
-    url="",
+    url="https://github.com/R1nY1x1/dippy",
 
     description="Digital Image Processing in Python",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    keywords="dippy Dippy",
+    keywords="dippy",
 
     classifiers=[
         "License :: OSI Approved :: MIT License",
