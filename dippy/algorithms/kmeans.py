@@ -6,8 +6,8 @@ def kmeans(src: np.ndarray, N: int = 16) -> np.ndarray:
     represents = np.random.randint(256, size=(N))
     for _ in range(10):
         distortions = [[0, 0] for _ in range(N)]
-        for y in range(src.shape[1]):
-            for x in range(src.shape[0]):
+        for y in range(src.shape[0]):
+            for x in range(src.shape[1]):
                 idx = np.argmin(np.abs(represents-dst[y][x]))
                 distortions[idx][0] += dst[y][x]
                 distortions[idx][1] += 1

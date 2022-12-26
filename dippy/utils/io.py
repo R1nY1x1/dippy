@@ -155,6 +155,52 @@ def readPng(path: str):
         return width, height, depth, colorType, interlace, bytearray(filtered_data)
 
 
+def readGif(path: str):
+    with open(path, "rb") as f:
+        # BMP file header
+        f.read(6)  # gifSignature
+        f.read(6)  # Version
+
+        f.read(4)  # width = int.from_bytes(f.read(4), byteorder='big')
+        f.read(4)  # height = int.from_bytes(f.read(4), byteorder='big')
+        f.read(2)  # field = int.from_bytes(f.read(2), byteorder='big')
+        # Global Color Table Flag
+        # | Color Resolution
+        # | |   Sort Flag
+        # | |   | Size of Global Color Table
+        # 1 010 0 001
+        bgColor = int.from_bytes(f.read(2), byteorder='big')
+        aspectRatio = int.from_bytes(f.read(2), byteorder='big')
+
+        f.read(6)  # colorTable = int.from_bytes(f.read(6), byteorder='big')
+        f.read(6)  # colorTable = int.from_bytes(f.read(6), byteorder='big')
+        f.read(6)  # colorTable = int.from_bytes(f.read(6), byteorder='big')
+        f.read(6)  # colorTable = int.from_bytes(f.read(6), byteorder='big')
+
+        separator = int.from_bytes(f.read(2), byteorder='big')
+        f.read(4)  # lPosition = int.from_bytes(f.read(4), byteorder='big')
+        f.read(4)  # tPosition = int.from_bytes(f.read(4), byteorder='big')
+        width = int.from_bytes(f.read(4), byteorder='big')
+        height = int.from_bytes(f.read(4), byteorder='big')
+        f.read(2)  # field = int.from_bytes(f.read(2), byteorder='big')
+        # Local Color Table Flag
+        # | Interlace Flag
+        # | | Sort Flag
+        # | | | Reserved
+        # | | | |  Size of Local Color Table
+        # 0 0 0 00 000
+
+        f.read(2)  # codeSizeLZW = int.from_bytes(f.read(2), byteorder='big')
+        size = int.from_bytes(f.read(2), byteorder='big')
+        pixels = f.read(size)
+
+        f.read(2)  # terminator = int.from_bytes(f.read(2), byteorder='big')
+        f.read(2)  # trailer = int.from_bytes(f.read(2), byteorder='big')
+
+        return pixels
+
+
+
 def writeBmp(path: str, width: int, height: int, bitCount: int, colorTables, pixels):
     with open(path, 'wb') as f:
         lenOfColors = len(colorTables)
