@@ -1,11 +1,95 @@
 import zlib
+import binascii
+from typing import Tuple
+import numpy as np
+
+
+def b2ndarray(bimg: bytes, width: int, height: int, isColor: bool) -> np.ndarray:
+    ndimg = (np.frombuffer(bimg, dtype=np.uint8))
+    if isColor:
+        ndimg = ndimg.reshape([3, width, height], order='F').copy()
+        ndimg = ndimg.transpose(0, 2, 1).copy()
+    else:
+        ndimg = ndimg.reshape([width, height], order='F').copy()
+        ndimg = ndimg.T.copy()
+    return ndimg
+
+
+def ndarray2b(ndimg: np.ndarray) -> Tuple[bytes, int]:
+    if len(ndimg.shape) == 3:
+        ndimg = ndimg.transpose(0, 2, 1).copy()
+        bimg = ndimg.reshape(-1, order='F').copy().tobytes()
+        bc = 0x08 * 3
+    else:
+        ndimg = ndimg.T.copy()
+        bimg = ndimg.reshape(-1, order='F').copy().tobytes()
+        bc = 0x08
+    return bimg, bc
 
 
 def readImg(path: str):
     if path[-3:] == "bmp":
-        return readBmp(path)
+        w, h, bc, ct, bimg = readBmp(path)
+        params = {"ft": "bmp", "w": w, "h": h, "bc": bc, "ct": ct}
+        isColor = ((bc >> 3) == 3)
+        ndimg = b2ndarray(bimg, w, h, isColor)
+        if len(ndimg.shape) == 3:
+            ndimg = ndimg[[2, 1, 0], ::-1, :]
+            ndimg = ndimg[:, ::-1, :]
+        else:
+            ndimg = ndimg[::-1, :]
+        return ndimg, params
     elif path[-3:] == "png":
-        return readPng(path)
+        w, h, d, cType, interlace, bimg = readPng(path)
+        params = {"ft": "png", "w": w, "h": h, "d": d, "cType": cType, "interlace": interlace}
+        isColor = (cType == 2)
+        ndimg = b2ndarray(bimg, w, h, isColor)
+        return ndimg, params
+    else:
+        print("Unknown FileType Error")
+
+
+def writeImg(path: str, ndimg: np.ndarray, params=None):
+    if path[-3:] == "bmp":
+        if params:
+            w = params["w"]
+            h = params["h"]
+            ct = params["ct"]
+        else:
+            if len(ndimg.shape) == 3:
+                w = ndimg.shape[1]
+                h = ndimg.shape[2]
+            else:
+                w = ndimg.shape[0]
+                h = ndimg.shape[1]
+            ct = []
+        if len(ndimg.shape) == 3:
+            ndimg = ndimg[[2, 1, 0], ::-1, :]
+        else:
+            ndimg = ndimg[::-1, :]
+        bimg, bc = ndarray2b(ndimg)
+        writeBmp(path, w, h, bc, ct, bimg)
+    elif path[-3:] == "png":
+        if params:
+            w = params["w"]
+            h = params["h"]
+            d = params["d"]
+            cType = params["cType"]
+            interlace = params["interlace"]
+        else:
+            if len(ndimg.shape) == 3:
+                w = ndimg.shape[1]
+                h = ndimg.shape[2]
+                d = 8
+                cType = 2
+            else:
+                w = ndimg.shape[0]
+                h = ndimg.shape[1]
+                d = 8
+                cType = 0
+            interlace = 0
+        bimg, _ = ndarray2b(ndimg)
+        writePng(path, w, h, d, cType, interlace, bimg)
     else:
         print("Unknown FileType Error")
 
@@ -200,7 +284,6 @@ def readGif(path: str):
         return pixels
 
 
-
 def writeBmp(path: str, width: int, height: int, bitCount: int, colorTables, pixels):
     with open(path, 'wb') as f:
         lenOfColors = len(colorTables)
@@ -270,7 +353,17 @@ def writePng(
         b.extend((0).to_bytes(1, 'big'))
         b.extend((0).to_bytes(1, 'big'))
         b.extend(interlace.to_bytes(1, 'big'))
-        b.extend(bytearray([0x7b, 0x1a, 0x43, 0xad]))
+        tmp = (
+            bytearray([ord(x) for x in "IHDR"])
+            + width.to_bytes(4, 'big')
+            + height.to_bytes(4, 'big')
+            + depth.to_bytes(1, 'big')
+            + colorType.to_bytes(1, 'big')
+            + (0).to_bytes(1, 'big')
+            + (0).to_bytes(1, 'big')
+            + interlace.to_bytes(1, 'big'))
+        crcIHDR = binascii.crc32(tmp, 0)
+        b.extend(crcIHDR.to_bytes(4, 'big'))
 
         # sRGB
         b.extend((1).to_bytes(4, 'big'))
@@ -297,13 +390,13 @@ def writePng(
             # data[offset:] = [0]
             data.append(0)
             data[offset+h+1:] = pixels[offset:offset+rowLength]
-        print(len(data))
         cmp_data = zlib.compress(bytearray(data))
 
         b.extend(len(cmp_data).to_bytes(4, 'big'))
         b.extend(bytearray([ord(x) for x in "IDAT"]))
         b.extend(cmp_data)
-        b.extend(bytearray([0xa5, 0x46, 0x15, 0x38]))
+        crcIDAT = binascii.crc32(bytearray([ord(x) for x in "IDAT"])+cmp_data, 0)
+        b.extend(crcIDAT.to_bytes(4, 'big'))
 
         # IEND
         b.extend((0).to_bytes(4, 'big'))

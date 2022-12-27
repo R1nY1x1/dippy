@@ -2,7 +2,7 @@ import numpy as np
 np.seterr(divide='ignore', invalid='ignore')
 
 
-def reverseNP(src: np.ndarray) -> np.ndarray:
+def inverseNP(src: np.ndarray) -> np.ndarray:
     dst = 255 - src
     return dst
 
@@ -34,7 +34,8 @@ def binarize(src: np.ndarray, method: str = "threshold", threshold: int = 128) -
                 (np.sum(src[src < i]) / p_all)
                 * (np.sum(src[src >= i]) / p_all)
                 * M
-                * M)
+                * M
+            )
         threshold = np.nanargmax(s)
         lut = np.zeros((256))
         lut[threshold:] = 255
