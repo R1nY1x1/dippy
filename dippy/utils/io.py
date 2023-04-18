@@ -7,22 +7,22 @@ import numpy as np
 def b2ndarray(bimg: bytes, width: int, height: int, isColor: bool) -> np.ndarray:
     ndimg = (np.frombuffer(bimg, dtype=np.uint8))
     if isColor:
-        ndimg = ndimg.reshape([3, width, height], order='F').copy()
-        ndimg = ndimg.transpose(0, 2, 1).copy()
+        ndimg = ndimg.reshape([height, width, 3], order='C').copy()
+        # ndimg = ndimg.transpose(0, 2, 1).copy()
     else:
-        ndimg = ndimg.reshape([width, height], order='F').copy()
-        ndimg = ndimg.T.copy()
+        ndimg = ndimg.reshape([height, width], order='C').copy()
+        # ndimg = ndimg.T.copy()
     return ndimg
 
 
 def ndarray2b(ndimg: np.ndarray) -> Tuple[bytes, int]:
     if len(ndimg.shape) == 3:
-        ndimg = ndimg.transpose(0, 2, 1).copy()
-        bimg = ndimg.reshape(-1, order='F').copy().tobytes()
+        # ndimg = ndimg.transpose(0, 2, 1).copy()
+        bimg = ndimg.reshape(-1, order='C').copy().tobytes()
         bc = 0x08 * 3
     else:
-        ndimg = ndimg.T.copy()
-        bimg = ndimg.reshape(-1, order='F').copy().tobytes()
+        # ndimg = ndimg.T.copy()
+        bimg = ndimg.reshape(-1, order='C').copy().tobytes()
         bc = 0x08
     return bimg, bc
 
@@ -34,8 +34,7 @@ def readImg(path: str):
         isColor = ((bc >> 3) == 3)
         ndimg = b2ndarray(bimg, w, h, isColor)
         if len(ndimg.shape) == 3:
-            ndimg = ndimg[[2, 1, 0], ::-1, :]
-            ndimg = ndimg[:, ::-1, :]
+            ndimg = ndimg[::-1, :, [2, 1, 0]]
         else:
             ndimg = ndimg[::-1, :]
         return ndimg, params
@@ -58,13 +57,13 @@ def writeImg(path: str, ndimg: np.ndarray, params=None):
         else:
             if len(ndimg.shape) == 3:
                 w = ndimg.shape[1]
-                h = ndimg.shape[2]
+                h = ndimg.shape[0]
             else:
-                w = ndimg.shape[0]
-                h = ndimg.shape[1]
+                w = ndimg.shape[1]
+                h = ndimg.shape[0]
             ct = []
         if len(ndimg.shape) == 3:
-            ndimg = ndimg[[2, 1, 0], ::-1, :]
+            ndimg = ndimg[::-1, :, [2, 1, 0]]
         else:
             ndimg = ndimg[::-1, :]
         bimg, bc = ndarray2b(ndimg)
@@ -79,12 +78,12 @@ def writeImg(path: str, ndimg: np.ndarray, params=None):
         else:
             if len(ndimg.shape) == 3:
                 w = ndimg.shape[1]
-                h = ndimg.shape[2]
+                h = ndimg.shape[0]
                 d = 8
                 cType = 2
             else:
-                w = ndimg.shape[0]
-                h = ndimg.shape[1]
+                w = ndimg.shape[1]
+                h = ndimg.shape[0]
                 d = 8
                 cType = 0
             interlace = 0
@@ -237,6 +236,10 @@ def readPng(path: str):
             prevRowData[1:] = currentScanData.copy()
 
         return width, height, depth, colorType, interlace, bytearray(filtered_data)
+
+
+def readJpg(path: str):
+    pass
 
 
 def readGif(path: str):

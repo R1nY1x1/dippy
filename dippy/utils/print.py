@@ -29,9 +29,9 @@ def printImgXY(img: np.ndarray, x: int, y: int, fc: int = 7, rate: float = 1):
 
 def img2braille(img: np.ndarray, rate: float = 1) -> list:
     brailles = []
-    for y in range(0, img.shape[1], math.ceil(4/rate)):
+    for y in range(0, img.shape[0], math.ceil(4/rate)):
         tmp = ""
-        for x in range(0, img.shape[0], math.ceil(2/rate)):
+        for x in range(0, img.shape[1], math.ceil(2/rate)):
             flags = 0
             try:
                 flags += (0b00000001 if img[y][x] else 0)
@@ -51,3 +51,23 @@ def img2braille(img: np.ndarray, rate: float = 1) -> list:
             tmp += chr(braille)
         brailles.append(tmp)
     return brailles
+
+
+def printImgAA(img: np.ndarray, rate: float = 1):
+    if len(img) == 3:
+        raise Exception
+    AA = img2AA(img, rate)
+    for row in AA:
+        print(row)
+
+
+def img2AA(img: np.ndarray, rate: float = 1) -> list:
+    density = list("MWN$@%#&B89EGA6mK5HRkbYT43V0JL7gpaseyxznocv?jIftr1li*=-~^`':;,. ")
+    LEN = len(density)
+    AA = []
+    for y in range(0, img.shape[0], math.ceil(2/rate)):
+        tmp = ""
+        for x in range(0, img.shape[1], math.ceil(1/rate)):
+            tmp += density[(LEN-1)-img[y][x]//(256//LEN)]
+        AA.append(tmp)
+    return AA

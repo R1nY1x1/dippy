@@ -10,13 +10,16 @@ def inverseNP(src: np.ndarray) -> np.ndarray:
 def convertColor(src: np.ndarray, method: str = "rgb2gray") -> np.ndarray:
     if len(src.shape) == 3:
         if method == "rgb2gray":
+            """
             dst = np.apply_along_axis(
                 lambda x: 0.299*x[0] + 0.587*x[1] + 0.114*x[2],
                 # lambda x: 0.333*x[0] + 0.333*x[1] + 0.333*x[2],
-                0,
+                2,
                 src)
+            """
+            dst = 0.299*src[:, :, 0] + 0.587*src[:, :, 1] + 0.114*src[:, :, 2]
         elif method == "rgb2bgr":
-            dst = src[[2, 1, 0], :, :]
+            dst = src[:, :, [2, 1, 0]]
     return dst.astype(np.uint8)
 
 
@@ -24,22 +27,27 @@ def binarize(src: np.ndarray, method: str = "threshold", threshold: int = 128) -
     if method == "threshold":
         lut = np.zeros((256))
         lut[threshold:] = 255
+        dst = lut[src]
     elif method == "otsu":
-        s = []
-        p_all = np.sum(src)
-        offset = 21
-        for i in range(0+offset, 256-offset):
-            M = np.average(src[src < i]) - np.average(src[src >= i])
-            s.append(
-                (np.sum(src[src < i]) / p_all)
-                * (np.sum(src[src >= i]) / p_all)
-                * M
-                * M
-            )
-        threshold = np.nanargmax(s)
-        lut = np.zeros((256))
-        lut[threshold:] = 255
-    dst = lut[src]
+        hist, _ = np.histogram(src, bins=256, range=[0, 256])
+        hist_norm = hist.ravel()/hist.sum()
+        Q = hist_norm.cumsum()
+        bins = np.arange(256)
+        fn_min = np.inf
+        threshold = -1
+        for i in range(1, 256):
+            p1, p2 = np.hsplit(hist_norm, [i, ])
+            q1, q2 = Q[i], Q[255]-Q[i]
+            if q1 < 1.e-6 or q2 < 1.e-6:
+                continue
+            b1, b2 = np.hsplit(bins, [i, ])
+            m1, m2 = np.sum(p1*b1)/q1, np.sum(p2*b2)/q2
+            v1, v2 = np.sum(((b1-m1)**2)*p1)/q1, np.sum(((b2-m2)**2)*p2)/q2
+            fn = (v1*q1) + (v2*q2)
+            if fn < fn_min:
+                fn_min = fn
+                threshold = i
+        dst = np.where(src <= threshold, 0, 255)
     return dst.astype(np.uint8)
 
 
