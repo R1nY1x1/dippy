@@ -31,15 +31,14 @@ def convertColor(src: np.ndarray, method: str = "rgb2gray") -> np.ndarray:
             ---
             Expression H with index,
                 (120 * i) + 60*(((i+1)%3)-(i-1)%3) / (V-min(R, G, B))
-                where i == 0 is R, i == 1 is G, i == 2 is B
-            ---
+                where i = argmax(R, G, B)
             """
             src = src.astype(np.int16)
             dst = src.copy()
             mins = np.min(src, axis=2)
             idxs = np.argmax(src, axis=2)
             tmp = np.rot90(np.rot90(src, axes=(1, 2)))
-            addends = 60 * idxs
+            addends = 120 * idxs
             minuends = np.choose((idxs + 1) % 3, tmp)
             subtrahends = np.choose((idxs - 1) % 3, tmp)
             v = np.choose(idxs, tmp)
@@ -52,6 +51,12 @@ def convertColor(src: np.ndarray, method: str = "rgb2gray") -> np.ndarray:
             dst[:, :, 0] = h / 2
             dst[:, :, 1] = s * 255
             dst[:, :, 2] = v * 255
+    elif len(src.shape) == 1:
+        if method == "gray2rgb":
+            dst = np.empty((src.shape[0], src.shape[1], 3))
+            dst[:, :, 0] = src
+            dst[:, :, 1] = src
+            dst[:, :, 2] = src
     return dst.astype(np.uint8)
 
 

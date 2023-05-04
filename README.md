@@ -78,6 +78,11 @@ $ pip install dip-python
     - [x] PNG
     - [ ] JPEG
     - [ ] GIF
+- [ ] Drawing
+    - [ ] Line
+    - [ ] Rectangle
+    - [ ] Circle
+    - [ ] Fonts
 
 ### Extra
 
