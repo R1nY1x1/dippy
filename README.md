@@ -16,29 +16,27 @@ $ pip install dip-python
 ### Algorithm
 
 - [ ] Convert
-    - [ ] Color
+    - [x] Inverse NegPog
+    - [x] Color
         - [x] rgb2gray
         - [x] rgb2bgr
-        - [ ] rgb2hsv
+        - [x] rgb2hsv
     - [x] binarize
         - [x] threshold
         - [x] otsu
     - [ ] Histgram Equalization
-    - [ ] Tonecurve
-        - [ ] Polygonal
-        - [ ] Gamma
-        - [ ] Sin
+    - [x] Tonecurve
+        - [x] Polygonal
+        - [x] Gamma
         - [x] Posterization
             - [x] Nearest Neighhbor
             - [x] Equality
-        - [ ] Solarization
     - [ ] Dithering(support 2way)
         - [x] Nearest Neighbor
         - [x] Floyd-Steinberg
         - [x] Sierra Lite
         - [x] Atkinson
         - [ ] Poison Disk Sampling
-        - [ ] Mosaic
     - [ ] Declease Color
         - [x] kMeans
 - [ ] Filtering
@@ -64,7 +62,10 @@ $ pip install dip-python
         - [ ] Gaussian Band Pass
         - [ ] Gaussian High Emphasis
 - [ ] Resize
+    - [ ] Nearest Neighbor
     - [x] Bi-Linear
+    - [ ] Bi-Cubic
+    - [ ] Lanczos
 - [ ] Image Operation
     - [ ] Alpha Blending
     - [ ] Emboss
