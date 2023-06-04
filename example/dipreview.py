@@ -83,6 +83,9 @@ def main(args):
                 elif path[-3:] == "npz":
                     ndimg = tmp[key][num]
                 print(f"[{num:>3}]")
+                if len(ndimg.shape) not in [2, 3]:
+                    print(ndimg)
+                    continue
                 displayImg(
                     ndimg,
                     doKmeans=args.kmeans,
